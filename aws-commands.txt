@@ -1,0 +1,103 @@
+
+;; CREATE (and upload) the lambda function
+;; note: 'fileb' for binary files. use file for text
+
+aws lambda create-function \
+--function-name ContractChecker \
+--runtime java8 \
+--memory-size 1024 \
+--timeout 59 \
+--description 'checks a json-schema consumer contracts compatibility with a producer contract ' \
+--role arn:aws:iam::948737168603:role/basic_lambda_role \
+--handler clojurehandler.Handler::handleRequest \
+--zip-file fileb://target/lambda-contract-checker-0.1.0-standalone.jar \
+--region eu-west-2
+
+
+;; DELETE the function
+aws lambda delete-function \
+--function-name ContractChecker 
+
+;; UPDATE the function's code
+aws lambda update-function-code \
+--function-name ContractChecker \
+--zip-file fileb://target/lambda-contract-checker-0.1.0-standalone.jar
+
+
+
+;; INVOKE the function
+
+aws lambda invoke \
+--function-name ContractChecker \
+--payload fileb://input.json \
+output.json
+
+
+
+curl -v -X POST \
+  'https://0j6kjsk388.execute-api.eu-west-2.amazonaws.com/beta' \
+  -H 'content-type: application/json' \
+  -d '{"data":"h:animal:person\ne:pandas:bridget,pandas:sharhar",
+"display-options" : {"show-roots?" : true, "cluster-on" : "animal", "layout" : "dot", "label" : "person", "dpi" : 72},
+"format-in" : "csv",
+"format-out" : "svg"}'
+
+
+
+java -jar target/cmd-draw-graph-0.1.0-standalone.jar \
+ -p /usr/local/bin/dot \
+ -i '{"data":"h,animal:person\ne,pandas:huxley,pandas:bridget\ne,pandas:bridget,pandas:max",
+ "display-options" : {"layout" : "dot", "label" : "person"},
+ "format-in" : "csv",
+ "format-out" : "svg"}'
+
+
+curl -v -X GET \
+   'http://ip-api.com/json/' \
+  -H 'content-type: application/json' 
+
+
+;; Building graphviz on amazon-ec2
+;; Standard Linux AMI
+
+
+sudo yum groupinstall "Development tools"
+sudo yum install expat-devel cairo-devel pango-devel
+wget https://graphviz.gitlab.io/pub/graphviz/stable/SOURCES/graphviz.tar.gz
+tar -svf graphviz.tar.gz
+cd graphviz-2.40.1/
+./configure   // try --enable_static
+make
+cd cmd/dot
+make dot_static
+
+;; then you have to do this from YOUR machine - i.e. not the ssh terminal
+ scp -i my-kp2.pem ec2-user@ec2-35-177-27-245.eu-west-2.compute.amazonaws.com:/home/ec2-user/graphviz-2.40.1/cmd/dot/dot_static ./
+
+
+ATTEMPT2
+Amazon execution environment: https://docs.aws.amazon.com/lambda/latest/dg/current-supported-versions.html
+
+
+sudo yum groupinstall "Development tools"
+
+wget https://github.com/libexpat/libexpat/releases/download/R_2_2_6/expat-2.2.6.tar.bz2
+tar -xvf expat-2.3.6.tar.bz2
+cd expat-2.2.6
+./configure  --enable-shared=no -q
+make --quiet
+sudo make install
+
+
+wget https://graphviz.gitlab.io/pub/graphviz/stable/SOURCES/graphviz.tar.gz
+tar -xvf graphviz.tar.gz
+cd graphviz-2.40.1/
+./configure   --enable-static=yes --enable-shared=no --with-expat=yes
+make
+cd cmd/dot
+make dot_static
+
+// checks
+ldd dot_static
+ldconfig -p | grep <library-name>  // to check if installed on box
+ ./dot_static -Tsvg in.dot -o out.svg
