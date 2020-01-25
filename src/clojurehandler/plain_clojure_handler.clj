@@ -7,12 +7,15 @@
 
 (defn conform-contract
   [js]
-  (let [in (json/read-str js :key-fn keyword)
-        consumer (:consumer in)
-        producer (:producer in)]
-    (if (and consumer producer)
-      (json/write-str {:errors (cc/check-contract (:consumer in) (:producer in) :rules rules/rules)})
-      (json/write-str {:errors "You must specify both a consumer and producer contract!"}))))
+  (try
+    (let [in (json/read-str js :key-fn keyword)
+          consumer (:consumer in)
+          producer (:producer in)]
+      (if (and consumer producer)
+        (json/write-str {:errors (cc/check-contract (:consumer in) (:producer in) :rules rules/rules)})
+        (json/write-str {:err "You must specify both a consumer and producer contract!"})))
+    (catch Exception e
+      (json/write-str {:err "Unspecified lambda error"}))))
 
 
 ;; gen-class and how to use it

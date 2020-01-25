@@ -35,12 +35,9 @@ output.json
 
 
 curl -v -X POST \
-  'https://0j6kjsk388.execute-api.eu-west-2.amazonaws.com/beta' \
+  'https://8ty9wnwd19.execute-api.eu-west-2.amazonaws.com/beta' \
   -H 'content-type: application/json' \
-  -d '{"data":"h:animal:person\ne:pandas:bridget,pandas:sharhar",
-"display-options" : {"show-roots?" : true, "cluster-on" : "animal", "layout" : "dot", "label" : "person", "dpi" : 72},
-"format-in" : "csv",
-"format-out" : "svg"}'
+  -d '{ "consumer": {"$id": "https://example.com/person.schema.json", "$schema": "http://json-schema.org/draft-07/schema#"}, "producer": {"$id": "https://example.com/person.schema.json", "$schema": "http://json-schema.org/draft-07/schema#"}}'
 
 
 
