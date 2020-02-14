@@ -12,7 +12,10 @@
           consumer (:consumer in)
           producer (:producer in)]
       (if (and consumer producer)
-        (json/write-str {:errors (cc/check-contract (:consumer in) (:producer in) :rules rules/rules)})
+        (let [errs
+              (json/write-str {:errors (cc/check-contract (:consumer in) (:producer in) :rules rules/rules)})]
+          (println errs)
+          errs)
         (json/write-str {:err "You must specify both a consumer and producer contract!"})))
     (catch Exception e
       (json/write-str {:err "Unspecified lambda error"}))))
